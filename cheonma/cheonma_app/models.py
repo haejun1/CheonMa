@@ -6,6 +6,7 @@ class Page(models.Model):
     level = models.ForeignKey('Level', on_delete=models.CASCADE, null=True)
 
 class Level(models.Model):
+    level = models.IntegerField(null=True)
     effect = models.CharField(max_length=255)
     lock = models.BooleanField(default=False)
     state = models.CharField(max_length=255)
