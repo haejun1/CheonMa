@@ -13,12 +13,12 @@ class HomeAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 class PageAPIView(APIView):
-    def get(self, request, format=None):
+    def get(self, request):
         pages = Page.objects.all()
-        serializer = PageSerializer(pages, many=True)
-        return Response(serializer.data)
+        pages_serializer = PageSerializer(pages, many=True).data
+        return Response(pages_serializer, status=status.HTTP_200_OK)
     
-    def post(self, request, format=None):
+    def post(self, request):
         name = request.data.get('name', None)
 
         if name is not None:
@@ -29,4 +29,14 @@ class PageAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response({'error': 'Name field is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+class LevelAPIView(APIView):
+    def post(self, request):
+        level_serializer = LevelSerializer(data=request.data)
+
+        if level_serializer.is_valid():
+            level_serializer.save()
+            return Response(level_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
 
