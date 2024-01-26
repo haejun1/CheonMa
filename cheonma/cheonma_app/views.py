@@ -17,7 +17,7 @@ class PageAPIView(APIView):
         pages = Page.objects.all()
         pages_serializer = PageSerializer(pages, many=True).data
         return Response(pages_serializer, status=status.HTTP_200_OK)
-    
+    0
     def post(self, request):
         name = request.data.get('name', None)
 
@@ -32,11 +32,22 @@ class PageAPIView(APIView):
 
 class LevelAPIView(APIView):
     def post(self, request):
-        level_serializer = LevelSerializer(data=request.data)
+        page_id = request.data.get('page', None)
 
-        if level_serializer.is_valid():
-            level_serializer.save()
-            return Response(level_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+        # Check if the page already has level 8
+        if Level.objects.filter(page=page_id, level=8).exists():
+            return Response({'error': '이미 모든 비급을 제작하였습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Find the current highest level for the given page
+        current_highest_level = Level.objects.filter(page=page_id).order_by('-level').first()
+
+        # Determine the next level to be posted
+        next_level = current_highest_level.level + 1 if current_highest_level else 1
+
+        # Create a new Level instance and set effect and level
+        new_level = Level(page_id=page_id, level=next_level)
+        new_level.set_effect_and_level(page=page_id)
+        new_level.set_state()
+
+        serializer = LevelSerializer(new_level)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -1,0 +1,9 @@
+# DAY5
+
+### level삽입 시 state 랜덤
+
+{"page": 1,"level": 2,"effect": "기본 공격 피해량","lock": false}
+
+### 순차적으로 level 및 effect 부여
+
+{"page": 1}
