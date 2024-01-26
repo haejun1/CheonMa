@@ -51,3 +51,27 @@ class LevelAPIView(APIView):
 
         serializer = LevelSerializer(new_level)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class LockAPIView(APIView):
+    def post(self, request):
+        page_id = request.data.get('page', None)
+        level_number = request.data.get('level', None)
+
+        if page_id is None or level_number is None:
+            return Response({'error': 'Both "page" and "level" are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            page_id = int(page_id)
+            level_number = int(level_number)
+        except ValueError:
+            return Response({'error': 'Invalid page or level format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            level = Level.objects.get(page_id=page_id, level=level_number)
+        except Level.DoesNotExist:
+            return Response({'error': 'Specified page or level does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+        level.lock = not level.lock
+        level.save()
+
+        return Response({'message': '성공적으로 잠금상태가 업데이트 됐습니다.'}, status=status.HTTP_200_OK)

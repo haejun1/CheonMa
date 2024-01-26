@@ -7,3 +7,7 @@
 ### 순차적으로 level 및 effect 부여
 
 {"page": 1}
+
+### lock상태 update
+
+{"page": 1, "level": 2}
