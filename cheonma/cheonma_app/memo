@@ -4,7 +4,7 @@
 
 {"page": 1,"level": 2,"effect": "기본 공격 피해량","lock": false}
 
-### 순차적으로 level 및 effect 부여
+### 순차적으로 level 및 effect 부여, reset시
 
 {"page": 1}
 

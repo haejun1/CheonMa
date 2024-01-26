@@ -34,23 +34,15 @@ class LevelAPIView(APIView):
     def post(self, request):
         page_id = request.data.get('page', None)
 
-        # Check if the page already has level 8
-        if Level.objects.filter(page=page_id, level=8).exists():
-            return Response({'error': '이미 모든 비급을 제작하였습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        smallest_null_state_level = Level.objects.filter(page=page_id, state__isnull=True).order_by('level').first()
 
-        # Find the current highest level for the given page
-        current_highest_level = Level.objects.filter(page=page_id).order_by('-level').first()
-
-        # Determine the next level to be posted
-        next_level = current_highest_level.level + 1 if current_highest_level else 1
-
-        # Create a new Level instance and set effect and level
-        new_level = Level(page_id=page_id, level=next_level)
-        new_level.set_effect_and_level(page=page_id)
-        new_level.set_state()
-
-        serializer = LevelSerializer(new_level)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if smallest_null_state_level:
+            smallest_null_state_level.set_state()
+            smallest_null_state_level.save()
+            serializer = LevelSerializer(smallest_null_state_level)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': '모든 비급이 제작 완료되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
 class LockAPIView(APIView):
     def post(self, request):
@@ -74,4 +66,25 @@ class LockAPIView(APIView):
         level.lock = not level.lock
         level.save()
 
-        return Response({'message': '성공적으로 잠금상태가 업데이트 됐습니다.'}, status=status.HTTP_200_OK)
+        return Response({'message': '잠금상태가 업데이트 됐습니다.'}, status=status.HTTP_200_OK)
+
+class ResetAPIView(APIView):
+    def post(self, request):
+        page_id = request.data.get('page', None)
+
+        if page_id is None:
+            return Response({'error': '맞는 페이지가 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            page_id = int(page_id)
+        except ValueError:
+            return Response({'error': 'Invalid page format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        levels_to_reset = Level.objects.filter(page_id=page_id)
+
+        for level in levels_to_reset:
+            if not level.lock:
+                level.state = None
+                level.save()
+
+        return Response({'message': f'Level information for page {page_id} reset successfully.'}, status=status.HTTP_200_OK)
